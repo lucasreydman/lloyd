@@ -11,8 +11,13 @@ GLOBAL_ENV="$HOME/.config/last30days/.env"
 check_perms() {
   local file="$1"
   if [[ ! -f "$file" ]]; then return; fi
+  # POSIX file modes are meaningless on Windows (NTFS uses ACLs; Git-Bash/MSYS
+  # reports a constant 644 for every file), so the check can never pass there —
+  # skip it to avoid a false-positive warning on every session start.
+  case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) return ;; esac
   local perms
-  perms=$(stat -f '%Lp' "$file" 2>/dev/null || stat -c '%a' "$file" 2>/dev/null || echo "")
+  # GNU stat (-c) first for Linux/Git-Bash; fall back to BSD stat (-f) on macOS.
+  perms=$(stat -c '%a' "$file" 2>/dev/null || stat -f '%Lp' "$file" 2>/dev/null || echo "")
   if [[ -n "$perms" && "$perms" != "600" && "$perms" != "400" ]]; then
     echo "/last30days: WARNING — $file has permissions $perms (should be 600)."
     echo "  Fix: chmod 600 $file"
