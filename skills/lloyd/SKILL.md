@@ -30,9 +30,7 @@ Report everything below in a clean, grouped format.
 
 ## Plugins
 
-| Plugin | Marketplace | What it does |
-|--------|-------------|--------------|
-| **stripe** | `claude-plugins-official` | Stripe integration — payments, subscriptions, Connect, best-practices skills (`stripe:*`) |
+_None currently installed._ (superpowers and oh-my-claudecode removed 2026-08-06; systematic-debugging survives as a local skill)
 
 ---
 
@@ -72,8 +70,8 @@ Invoke any skill via the `Skill` tool. Type `/` in Claude Code to browse all inv
 
 Skills come from three places, all surfaced together in the `/` menu:
 - **Local** — your own skills in `~/.claude/skills/`. Everything from *Workflow & Engineering* down through *Dev Tools & Infrastructure* below.
-- **Plugin** — bundled by an enabled plugin (namespaced `plugin:skill`), e.g. `stripe:*`. See *Plugin & Built-in Skills*.
-- **Built-in** — ship with Claude Code itself (`verify`, `code-review`, `loop`, etc.). Also under *Plugin & Built-in Skills*.
+- **Plugin** — bundled by an enabled plugin (namespaced `plugin:skill`); none currently enabled.
+- **Built-in** — ship with Claude Code itself (`verify`, `code-review`, `loop`, etc.). See *Built-in Skills*.
 
 Only local skills count toward the skill total reported above.
 
@@ -167,20 +165,10 @@ Only local skills count toward the skill total reported above.
 
 ---
 
-## Plugin & Built-in Skills
+## Built-in Skills
 
-Not in `~/.claude/skills/` — these ship with plugins or with Claude Code itself. They appear in the `/` menu alongside the custom skills above.
+Not in `~/.claude/skills/` — these ship with Claude Code itself. They appear in the `/` menu alongside the custom skills above.
 
-### Stripe plugin (`stripe@claude-plugins-official`)
-| Skill | When to use |
-|-------|-------------|
-| `stripe:stripe-best-practices` | Any Stripe integration — API choice, Connect, billing, key/webhook security |
-| `stripe:stripe-projects` | Provision a third-party service via projects.dev |
-| `stripe:explain-error` | Decode a Stripe error code with fix examples |
-| `stripe:test-cards` | Stripe test card numbers for each scenario |
-| `stripe:upgrade-stripe` | Upgrade Stripe API version / SDK |
-
-### Built-in (Claude Code core)
 | Skill | When to use |
 |-------|-------------|
 | `deep-research` | Multi-source, fact-checked, cited research report |

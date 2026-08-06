@@ -22,8 +22,9 @@ git status --short
 
 - If only auto-generated files are modified (e.g. `plugins/known_marketplaces.json`, `plugins/installed_plugins.json`), discard them:
   ```bash
-  git checkout -- plugins/known_marketplaces.json plugins/installed_plugins.json settings.json 2>/dev/null; true
+  git checkout -- plugins/known_marketplaces.json plugins/installed_plugins.json 2>/dev/null; true
   ```
+- **Never discard `settings.json`** — it holds intentional config (hooks, MCP servers, permissions). If it's modified, commit it.
 - If real intentional local edits exist, commit them first before pulling.
 
 ### 2. Pull with submodules
