@@ -1,25 +1,4 @@
 {
   "version": 2,
-  "plugins": {
-    "oh-my-claudecode@direct": [
-      {
-        "scope": "user",
-        "installPath": "C:\\Users\\lucas\\.claude\\plugins\\cache\\direct\\oh-my-claudecode\\4.9.1",
-        "version": "4.9.1",
-        "installedAt": "2026-03-27T00:00:00.000Z",
-        "lastUpdated": "2026-03-27T00:00:00.000Z",
-        "gitCommitSha": "275272679a878809686cb7977c7e2f9a22db4037"
-      }
-    ],
-    "superpowers@superpowers-marketplace": [
-      {
-        "scope": "user",
-        "installPath": "C:\\Users\\lucas\\.claude\\plugins\\cache\\superpowers-marketplace\\superpowers\\5.0.5",
-        "version": "5.0.5",
-        "installedAt": "2026-03-23T15:19:59.356Z",
-        "lastUpdated": "2026-03-23T15:19:59.356Z",
-        "gitCommitSha": "8ea39819eed74fe2a0338e71789f06b30e953041"
-      }
-    ]
-  }
+  "plugins": {}
 }

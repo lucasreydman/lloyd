@@ -98,6 +98,7 @@ Omit any category with 0 files from the summary.
 Then act on it:
 - If `total_files` is 0: stop with "No supported files found in [path]."
 - If `skipped_sensitive` is non-empty: mention file count skipped, not the file names.
+- **Smart-scope check (always, regardless of size)**: scan the top-level subdirs and individual files for noise that detect doesn't filter — `logs/`, `log/`, `data/` if it holds dumps, `screenshots/`, `dumps/`, `recordings/`, `fixtures/` of generated data, `*crash_trace*`, `*faulthandler*`, `*.log` files, archived/exported data dirs, generated API-doc dumps. Runtime artifacts and dumps are NOT app structure — they belong out of the graph. If any are present, propose a code-only scope (typical: `src/ app/ lib/ engine/ dashboard/ components/ scripts/` + the project's `README.md`, `CLAUDE.md`, `AGENTS.md`, key design docs) and confirm before proceeding. For a single stray dump file (e.g. one `crash_trace.txt`), just exclude it silently and note in your summary.
 - If `total_words` > 2,000,000 OR `total_files` > 200: show the warning and the top 5 subdirectories by file count, then ask which subfolder to run on. Wait for the user's answer before proceeding.
 - Otherwise: proceed directly to Step 2.5 if video files were detected, or Step 3 if not.
 

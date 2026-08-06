@@ -30,7 +30,6 @@ git status --short
 
 ```bash
 git pull --recurse-submodules origin main
-git submodule update --init -- "plugins/cache/direct/oh-my-claudecode/4.9.1"
 ```
 
 ### 3. Check what changed
@@ -94,6 +93,5 @@ Produce a summary with two sections:
 ## Notes
 
 - **`~/.claude` IS the dotfiles repo. Never clone it to `~/dev/` or anywhere else.** Git operations (`pull`, `push`, `commit`) always run in `~/.claude` directly — that is the working copy.
-- Submodule: `oh-my-claudecode` at `plugins/cache/direct/oh-my-claudecode/4.9.1`
 - `plugins/known_marketplaces.json` is excluded from git (auto-generated) — ignore drift there
 - After pulling, if `settings.json` changed → tell user to **restart Claude Code**

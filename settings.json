@@ -1,4 +1,5 @@
 {
+  "skillListingBudgetFraction": 0.05,
   "permissions": {
     "allow": [
       "Bash(*)",
@@ -10,23 +11,48 @@
     ],
     "defaultMode": "bypassPermissions"
   },
-  "enabledPlugins": {
-    "superpowers@superpowers-marketplace": true
-  },
-  "extraKnownMarketplaces": {
-    "superpowers-marketplace": {
-      "source": {
-        "source": "github",
-        "repo": "obra/superpowers-marketplace"
+  "model": "fable",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/pre-tool-use.sh"
+          }
+        ]
       }
-    }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/post-tool-use.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/statusline-command.sh"
   },
   "sandbox": {
     "allowUnsandboxedCommands": true
   },
+  "effortLevel": "xhigh",
   "autoUpdatesChannel": "latest",
-  "voiceEnabled": false,
+  "tui": "fullscreen",
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
   "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
+  "voiceEnabled": true,
   "allowedTools": [
     "Bash",
     "Read",
@@ -84,34 +110,5 @@
         "context-mode"
       ]
     }
-  },
-  "effortLevel": "medium",
-  "statusLine": {
-    "type": "command",
-    "command": "bash ~/.claude/statusline-command.sh"
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/hooks/pre-tool-use.sh"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/hooks/post-tool-use.sh"
-          }
-        ]
-      }
-    ]
   }
 }

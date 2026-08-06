@@ -30,10 +30,9 @@ Report everything below in a clean, grouped format.
 
 ## Plugins
 
-| Plugin | Version | What it does |
-|--------|---------|--------------|
-| **superpowers** | v5.0.5 | Full workflow framework — TDD, planning, subagents, debugging, code review, git worktrees |
-| **oh-my-claudecode** | v4.9.1 | UI and theme enhancements for Claude Code |
+| Plugin | Marketplace | What it does |
+|--------|-------------|--------------|
+| **stripe** | `claude-plugins-official` | Stripe integration — payments, subscriptions, Connect, best-practices skills (`stripe:*`) |
 
 ---
 
@@ -71,28 +70,22 @@ These are role definitions, not skills — dispatch via the Agent tool, not the 
 
 Invoke any skill via the `Skill` tool. Type `/` in Claude Code to browse all invocable skills.
 
-### Workflow & Engineering (superpowers)
+Skills come from three places, all surfaced together in the `/` menu:
+- **Local** — your own skills in `~/.claude/skills/`. Everything from *Workflow & Engineering* down through *Dev Tools & Infrastructure* below.
+- **Plugin** — bundled by an enabled plugin (namespaced `plugin:skill`), e.g. `stripe:*`. See *Plugin & Built-in Skills*.
+- **Built-in** — ship with Claude Code itself (`verify`, `code-review`, `loop`, etc.). Also under *Plugin & Built-in Skills*.
+
+Only local skills count toward the skill total reported above.
+
+### Workflow & Engineering
 | Skill | When to use |
 |-------|-------------|
-| `superpowers:brainstorming` | Before any creative work — features, architecture, naming |
-| `superpowers:writing-plans` | Before touching code on a multi-step task |
-| `superpowers:executing-plans` | Executing a written plan in a separate session |
-| `superpowers:subagent-driven-development` | Executing a plan with parallel/independent tasks in current session |
-| `superpowers:test-driven-development` | Before writing any implementation code |
-| `superpowers:systematic-debugging` | When hitting a bug or failing test |
-| `superpowers:requesting-code-review` | After completing a feature or before merging |
-| `superpowers:receiving-code-review` | When acting on review feedback |
-| `superpowers:verification-before-completion` | Before claiming any task is done |
-| `superpowers:finishing-a-development-branch` | When implementation is complete and ready to ship |
-| `superpowers:dispatching-parallel-agents` | When 2+ independent tasks can run simultaneously |
-| `superpowers:using-git-worktrees` | When feature work needs isolation from main workspace |
-| `superpowers:writing-skills` | When creating or editing a skill |
+| `systematic-debugging` | When hitting a gnarly bug or flaky test — root-cause tracing, condition-based waiting references |
 
 ### Dotfiles & Config
 | Skill | When to use |
 |-------|-------------|
 | `sync-dotfiles` | Sync LLOYD to a new machine or pull latest updates |
-| `update-claude-md` | Auto-generate or update a project's CLAUDE.md |
 | `skill-creator` | Guided workflow for building a new skill |
 
 ### Research & Intelligence
@@ -141,6 +134,9 @@ Invoke any skill via the `Skill` tool. Type `/` in Claude Code to browse all inv
 | Skill | When to use |
 |-------|-------------|
 | `frontend-design` | Building production web UI |
+| `impeccable` | Design / redesign, UX review, polish, reusable design systems |
+| `design-taste-frontend` | Anti-slop landing pages, portfolios, redesigns |
+| `emil-design-eng` | UI polish, animation, component design (Emil Kowalski philosophy) |
 | `ui-ux-pro-max` | UI/UX decisions, color, typography |
 | `web-design-guidelines` | Reviewing UI for accessibility / best practices |
 | `web-artifacts-builder` | Multi-component HTML artifacts |
@@ -165,8 +161,42 @@ Invoke any skill via the `Skill` tool. Type `/` in Claude Code to browse all inv
 | `mcp-builder` | Building an MCP server |
 | `webapp-testing` | Testing a local web app with Playwright |
 | `agent-sandboxes` | Running code in a secure cloud sandbox |
+| `graphify` | Build a knowledge graph from code/docs → clustered communities + audit report |
 | `internal-comms` | Internal docs, status updates, newsletters |
 | `doc-coauthoring` | Co-authoring a spec or proposal |
+
+---
+
+## Plugin & Built-in Skills
+
+Not in `~/.claude/skills/` — these ship with plugins or with Claude Code itself. They appear in the `/` menu alongside the custom skills above.
+
+### Stripe plugin (`stripe@claude-plugins-official`)
+| Skill | When to use |
+|-------|-------------|
+| `stripe:stripe-best-practices` | Any Stripe integration — API choice, Connect, billing, key/webhook security |
+| `stripe:stripe-projects` | Provision a third-party service via projects.dev |
+| `stripe:explain-error` | Decode a Stripe error code with fix examples |
+| `stripe:test-cards` | Stripe test card numbers for each scenario |
+| `stripe:upgrade-stripe` | Upgrade Stripe API version / SDK |
+
+### Built-in (Claude Code core)
+| Skill | When to use |
+|-------|-------------|
+| `deep-research` | Multi-source, fact-checked, cited research report |
+| `verify` | Run the app and observe behavior to confirm a change works |
+| `code-review` | Review the current diff for bugs / cleanups (`--comment`, `--fix`) |
+| `simplify` | Apply reuse / simplification / efficiency cleanups to the diff |
+| `security-review` | Security review of pending branch changes |
+| `review` | Review a pull request |
+| `run` | Launch and drive the project's app to see a change live |
+| `init` | Initialize a project `CLAUDE.md` with codebase docs |
+| `loop` | Run a prompt / slash command on a recurring interval |
+| `schedule` | Create / manage scheduled cloud agents (cron routines) |
+| `claude-api` | Reference for Claude API / Anthropic SDK (models, pricing, params) |
+| `update-config` | Configure the harness via `settings.json` (hooks, permissions, env) |
+| `keybindings-help` | Customize keyboard shortcuts in `~/.claude/keybindings.json` |
+| `fewer-permission-prompts` | Scan transcripts → add a read-only Bash/MCP allowlist |
 
 ---
 
