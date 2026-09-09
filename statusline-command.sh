@@ -22,16 +22,27 @@ SEP="${DIM} ⟩${R} "
 
 # ── Parse stdin JSON (one jq call) ───────────────────────────────────────────
 # US (0x1f) separator: not IFS-whitespace, so empty fields stay in place instead of shifting.
-IFS=$'\x1f' read -r cwd model used_pct dur_ms api_ms rl5 rl7 cache_on <<< "$(printf '%s' "$input" | jq -r '[
+IFS=$'\x1f' read -r cwd model used_pct dur_ms api_ms rl5 rl5_reset rl7 cache_warm cache_exp <<< "$(printf '%s' "$input" | jq -r '[
   (.workspace.current_dir // .cwd // ""),
   (.model.display_name // .model.name // ""),
   (.context_window.used_percentage // ""),
   (.cost.total_duration_ms // ""),
   (.cost.total_api_duration_ms // ""),
   (.rate_limits.five_hour.used_percentage // ""),
+  (.rate_limits.five_hour.resets_at // ""),
   (.rate_limits.seven_day.used_percentage // ""),
-  (.prompt_cache.enabled // "")
+  (.prompt_cache.warm // ""),
+  (.prompt_cache.expires_at // "")
 ] | map(tostring) | join("")' 2>/dev/null)"
+
+now=$(date +%s)
+
+fmt_dur() {  # ms → 4h29m / 12m / 45s
+  local secs=$(( ${1%.*} / 1000 ))
+  if   [ "$secs" -ge 3600 ]; then printf '%dh%02dm' $(( secs / 3600 )) $(( (secs % 3600) / 60 ))
+  elif [ "$secs" -ge 60 ];   then printf '%dm' $(( secs / 60 ))
+  else                            printf '%ds' "$secs"; fi
+}
 
 color_for_pct() {
   local p=$1
@@ -68,17 +79,28 @@ bar=""    ; [ -n "$used_pct" ] && bar=$(meter context "$used_pct")
 rl_str="" ; [ -n "$rl5" ]      && rl_str=$(meter session "$rl5")
 rl7_str=""; [ -n "$rl7" ]      && rl7_str=$(meter weekly "$rl7")
 
+# When the session limit is yellow/red, show how long until the 5-hour window resets (↻ 1h12m).
+if [ -n "$rl5" ] && [ -n "$rl5_reset" ]; then
+  rl5_pct=$(printf "%.0f" "$rl5" 2>/dev/null || echo 0)
+  left=$(( ${rl5_reset%.*} - now ))
+  if [ "$rl5_pct" -ge 60 ] && [ "$left" -gt 0 ]; then
+    rl_str="${rl_str} $(color_for_pct "$rl5_pct")↻ $(fmt_dur $(( left * 1000 )))${R}"
+  fi
+fi
+
 # ── Time: "open" = wall-clock since launch, "working" = time spent in model calls ──
-fmt_dur() {  # ms → 4h29m / 12m / 45s
-  local secs=$(( ${1%.*} / 1000 ))
-  if   [ "$secs" -ge 3600 ]; then printf '%dh%02dm' $(( secs / 3600 )) $(( (secs % 3600) / 60 ))
-  elif [ "$secs" -ge 60 ];   then printf '%dm' $(( secs / 60 ))
-  else                            printf '%ds' "$secs"; fi
-}
 elapsed=""
 [ -n "$dur_ms" ] && elapsed="${DIM}open${R} ${WHITE}$(fmt_dur "$dur_ms")${R}"
 [ -n "$api_ms" ] && elapsed="${elapsed:+$elapsed  }${DIM}working${R} ${WHITE}$(fmt_dur "$api_ms")${R}"
-[ "$cache_on" = "false" ] && elapsed="${elapsed} ${DIM}(no cache)${R}"
+# Prompt cache: warn in the last 5 minutes of the TTL (send anything to keep it warm); flag when cold.
+if [ "$cache_warm" = "true" ] && [ -n "$cache_exp" ]; then
+  left=$(( ${cache_exp%.*} - now ))
+  if [ "$left" -gt 0 ] && [ "$left" -le 300 ]; then
+    elapsed="${elapsed:+$elapsed  }${YELLOW}cache $(fmt_dur $(( left * 1000 )))${R}"
+  fi
+elif [ "$cache_warm" = "false" ]; then
+  elapsed="${elapsed:+$elapsed  }${DIM}(no cache)${R}"
+fi
 
 # ── Assemble ─────────────────────────────────────────────────────────────────
 parts=("${MAGENTA}◈ L·L·O·Y·D${R}")

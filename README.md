@@ -114,9 +114,10 @@ git config --global core.excludesFile ~/.claude/gitignore_global
 | model | `model.display_name` |
 | `context` meter | `context_window.used_percentage` |
 | `weekly` meter | `rate_limits.seven_day.used_percentage` |
-| `session` meter | `rate_limits.five_hour.used_percentage` |
+| `session` meter | `rate_limits.five_hour.used_percentage`; when ≥60% adds `↻ 1h12m` until the window resets (`resets_at`) |
 | `open 4h29m` | `cost.total_duration_ms` — wall-clock since launch |
-| `working 52m` | `cost.total_api_duration_ms` — time in model calls (adds `(no cache)` when prompt cache is off) |
+| `working 52m` | `cost.total_api_duration_ms` — time in model calls |
+| `cache 4m` | shown only in the last 5 min of the prompt-cache TTL (`prompt_cache.expires_at`); send anything to keep it warm. `(no cache)` when `prompt_cache.warm` is false |
 
 No hooks and no state file — earlier versions tracked tool calls with PreToolUse/PostToolUse hooks, which cost ~0.5 s per tool call on Windows.
 
