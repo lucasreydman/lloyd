@@ -105,7 +105,7 @@ git config --global core.excludesFile ~/.claude/gitignore_global
 ## Status line
 
 ```
-◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████░░░░░░ 43%  ⟩  context ████████░░ 78%  ⟩  session ███░░░░░░░ 34%  ⟩  weekly █░░░░░░░░░ 12%  ⟩  34m
+◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████░░░░░░ 43%  ⟩  context ████████░░ 78%  ⟩  session ███░░░░░░░ 34%  ⟩  weekly █░░░░░░░░░ 12%  ⟩  open 4h29m  working 52m
 ```
 
 | Field | Source |
@@ -115,7 +115,8 @@ git config --global core.excludesFile ~/.claude/gitignore_global
 | `context` meter | `context_window.used_percentage` |
 | `weekly` meter | `rate_limits.seven_day.used_percentage` |
 | `session` meter | `rate_limits.five_hour.used_percentage` |
-| `34m` | `cost.total_duration_ms` (adds `(no cache)` when prompt cache is off) |
+| `open 4h29m` | `cost.total_duration_ms` — wall-clock since launch |
+| `working 52m` | `cost.total_api_duration_ms` — time in model calls (adds `(no cache)` when prompt cache is off) |
 
 No hooks and no state file — earlier versions tracked tool calls with PreToolUse/PostToolUse hooks, which cost ~0.5 s per tool call on Windows.
 

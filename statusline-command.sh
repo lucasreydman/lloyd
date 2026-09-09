@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # L.L.O.Y.D. Status Line — Logical Learning & Optimization Yield Director
 #
-# Output: ◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  context ████████░░ 78%  ⟩  session ███░░░░░░░ 34%  ⟩  weekly █░░░░░░░░░ 12%  ⟩  34m
+# Output: ◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  context ████████░░ 78%  ⟩  session ███░░░░░░░ 34%  ⟩  weekly █░░░░░░░░░ 12%  ⟩  open 4h29m  working 52m
 #
 # Everything comes from the JSON Claude Code pipes to stdin — no hooks, no state file.
 # Fields: https://code.claude.com/docs/en/statusline
@@ -22,11 +22,12 @@ SEP="${DIM} ⟩${R} "
 
 # ── Parse stdin JSON (one jq call) ───────────────────────────────────────────
 # US (0x1f) separator: not IFS-whitespace, so empty fields stay in place instead of shifting.
-IFS=$'\x1f' read -r cwd model used_pct dur_ms rl5 rl7 cache_on <<< "$(printf '%s' "$input" | jq -r '[
+IFS=$'\x1f' read -r cwd model used_pct dur_ms api_ms rl5 rl7 cache_on <<< "$(printf '%s' "$input" | jq -r '[
   (.workspace.current_dir // .cwd // ""),
   (.model.display_name // .model.name // ""),
   (.context_window.used_percentage // ""),
   (.cost.total_duration_ms // ""),
+  (.cost.total_api_duration_ms // ""),
   (.rate_limits.five_hour.used_percentage // ""),
   (.rate_limits.seven_day.used_percentage // ""),
   (.prompt_cache.enabled // "")
@@ -67,14 +68,16 @@ bar=""    ; [ -n "$used_pct" ] && bar=$(meter context "$used_pct")
 rl_str="" ; [ -n "$rl5" ]      && rl_str=$(meter session "$rl5")
 rl7_str=""; [ -n "$rl7" ]      && rl7_str=$(meter weekly "$rl7")
 
-# ── Elapsed ──────────────────────────────────────────────────────────────────
+# ── Time: "open" = wall-clock since launch, "working" = time spent in model calls ──
+fmt_dur() {  # ms → 4h29m / 12m / 45s
+  local secs=$(( ${1%.*} / 1000 ))
+  if   [ "$secs" -ge 3600 ]; then printf '%dh%02dm' $(( secs / 3600 )) $(( (secs % 3600) / 60 ))
+  elif [ "$secs" -ge 60 ];   then printf '%dm' $(( secs / 60 ))
+  else                            printf '%ds' "$secs"; fi
+}
 elapsed=""
-if [ -n "$dur_ms" ]; then
-  secs=$(( ${dur_ms%.*} / 1000 ))
-  if   [ "$secs" -ge 3600 ]; then elapsed="$(( secs / 3600 ))h$(( (secs % 3600) / 60 ))m"
-  elif [ "$secs" -ge 60 ];   then elapsed="$(( secs / 60 ))m"
-  else                            elapsed="${secs}s"; fi
-fi
+[ -n "$dur_ms" ] && elapsed="${DIM}open${R} ${WHITE}$(fmt_dur "$dur_ms")${R}"
+[ -n "$api_ms" ] && elapsed="${elapsed:+$elapsed  }${DIM}working${R} ${WHITE}$(fmt_dur "$api_ms")${R}"
 [ "$cache_on" = "false" ] && elapsed="${elapsed} ${DIM}(no cache)${R}"
 
 # ── Assemble ─────────────────────────────────────────────────────────────────
@@ -85,7 +88,7 @@ parts+=("$loc")
 [ -n "$bar" ]         && parts+=("$bar")
 [ -n "$rl_str" ]      && parts+=("$rl_str")
 [ -n "$rl7_str" ]     && parts+=("$rl7_str")
-[ -n "$elapsed" ]     && parts+=("${WHITE}${elapsed}${R}")
+[ -n "$elapsed" ]     && parts+=("$elapsed")
 
 printf '%s' "${parts[0]}"
 for part in "${parts[@]:1}"; do printf '%s%s' "$SEP" "$part"; done
