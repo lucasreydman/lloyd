@@ -21,7 +21,8 @@ DIM=$'\033[2;37m'
 SEP="${DIM} ⟩${R} "
 
 # ── Parse stdin JSON (one jq call) ───────────────────────────────────────────
-IFS=$'\t' read -r cwd model used_pct dur_ms rl5 rl7 cache_on <<< "$(printf '%s' "$input" | jq -r '[
+# US (0x1f) separator: not IFS-whitespace, so empty fields stay in place instead of shifting.
+IFS=$'\x1f' read -r cwd model used_pct dur_ms rl5 rl7 cache_on <<< "$(printf '%s' "$input" | jq -r '[
   (.workspace.current_dir // .cwd // ""),
   (.model.display_name // .model.name // ""),
   (.context_window.used_percentage // ""),
