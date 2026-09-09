@@ -1,136 +1,44 @@
-# Dev Projects — Graphify Workflow
+# Dev Projects — Graphify Workflow (updated 2026-09-09)
 
-All projects in `C:\Users\lucas\dev` are graphified. Read `GRAPH_REPORT.md` first, query the graph, only open raw files as last resort.
+Graphify is opt-in per project. Only projects with a `graphify-out/` folder are graphed; Claude skips graphify everywhere else (rule in `CLAUDE.md`).
 
-## Project Root
+## Current graphs
 
-```
-C:\Users\lucas\dev\
-  bvp-betting\           graphify-out\ ✓
-  csci3172\              graphify-out\ ✓
-  cv\                    graphify-out\ ✓
-  fantasy-draft-lottery-simulator\  graphify-out\ ✓
-  mlb-cfr\               graphify-out\ ✓
-  nba-dynasty-rankings\  graphify-out\ ✓
-  pride-stem-combined\   graphify-out\ ✓
-  tpdl-lottery\          graphify-out\ ✓
-  valentine\             graphify-out\ ✓
-  what-do-i-need-on-my-final\  graphify-out\ ✓
-  yrfi\                  graphify-out\ ✓
-  knowledge\             graphify-out\ ✓  ← master cross-project graph (826n 1491e)
-```
+| Project | graphify-out | Last built |
+|---------|--------------|-----------|
+| bvp-betting | ✓ | 2026-04 |
+| cv | ✓ (report only, no graph.json) | 2026-04 |
+| deskvitals-live | ✓ | 2026-04 |
+| nba-dynasty-rankings | ✓ | 2026-04 |
+| sharprfi | ✓ (report only) | 2026-07 |
+| shielded-wheel | ✓ | 2026-04 |
+| knowledge (master) | ✓ — junctions to bvp-betting, consensus-points-dynasty-ranking, cv, nba-dynasty-rankings, sharprfi | 2026-07 |
 
-`knowledge\` contains Windows junction points to all 11 project folders. No file copies.
+Active projects without graphs (fbi-basketball, sleeper-ff-manager, blakey-breakthrough-dashboard, cr-deck-finder, lucasreydman.xyz, simple-fitness, nfl-fantasy-draft-big-board) rely on their own `CLAUDE.md` + auto-memory instead. Graph them only if the codebase is large enough that the report earns its keep (graphify's own corpus check will tell you).
 
-## Per-Project Commands
+## Commands (graphifyy ≥ 0.9.57)
 
 ```bash
-# Read the graph before touching any project
-cat "C:\Users\lucas\dev\<project>\graphify-out\GRAPH_REPORT.md"
+# Build / rebuild — via the skill, scoped to app code
+/graphify <path>
 
-# Incremental update after code changes
-cd "C:\Users\lucas\dev\<project>"
-PYTHONUTF8=1 python -m graphify . --update --no-viz
+# Incremental refresh after code changes (AST only, no LLM)
+PYTHONUTF8=1 python -m graphify update .
 
-# Full rebuild
-PYTHONUTF8=1 python -m graphify . --no-viz
+# Query (low-token)
+PYTHONUTF8=1 python -m graphify query "<question>" --graph graphify-out/graph.json --budget 1500
+PYTHONUTF8=1 python -m graphify path "A" "B" --graph graphify-out/graph.json
+PYTHONUTF8=1 python -m graphify explain "Node" --graph graphify-out/graph.json
 
-# Focused query
-PYTHONUTF8=1 python -m graphify query "your question" \
-  --graph "C:\Users\lucas\dev\<project>\graphify-out\graph.json" \
-  --budget 1500
+# Optional: auto-rebuild on commit/checkout
+python -m graphify hook install
 ```
 
-> **Windows note:** Always set `PYTHONUTF8=1` before running `graphify query` — the output contains Unicode characters that Windows' default cp1252 encoding can't handle.
+`--update` and `--no-viz` are no longer flags on the build command; `update` is its own subcommand and always keeps the HTML. Re-export the Obsidian canvas after a rebuild (see `docs/graphify-obsidian-workflow.md`).
 
-## Master Graph (Cross-Project)
+## Adding a project to the master graph
 
-```bash
-# Read master graph report
-cat "C:\Users\lucas\dev\knowledge\graphify-out\GRAPH_REPORT.md"
-
-# Query across all projects
-PYTHONUTF8=1 python -m graphify query "your question" \
-  --graph "C:\Users\lucas\dev\knowledge\graphify-out\graph.json" \
-  --budget 2000
-
-# Rebuild master graph after updating individual projects
-cd "C:\Users\lucas\dev\knowledge"
-PYTHONUTF8=1 python -m graphify . --update --no-viz
+```powershell
+New-Item -ItemType Junction -Path "C:\Users\lucas\dev\knowledge\<project>" -Target "C:\Users\lucas\dev\<project>"
 ```
-
-## Low-Token Rules
-
-1. **Read `GRAPH_REPORT.md` first** — god nodes + community structure in one file.
-2. **Use `graphify query` for specific questions** — BFS/DFS over the graph, not recursive file reads.
-3. **Never dump `graph.json` into context** — it's a data file for programmatic traversal only.
-4. **Open raw files only when graph summaries are insufficient.**
-5. **Use `--update` not full rebuild** — only re-extracts changed files.
-6. **Use `--budget 1500`** — caps query output at ~1500 tokens.
-7. **Use the master graph for cross-project questions** — don't open multiple per-project graphs.
-
-## Obsidian Visualization
-
-All graphs are exported as Obsidian note sets into:
-```
-C:\Users\lucas\Documents\Obsidian\SecondBrain\graphify-vault\
-  INDEX.md              ← start here
-  _master\              ← 863-node cross-project graph
-  bvp-betting\
-  csci3172\
-  ... (one folder per project)
-```
-
-Open `graphify-vault/` as a vault in Obsidian (or keep it inside SecondBrain). Use:
-- **Graph view** — filter by folder to see one project's cluster
-- **Canvas** — open any `graph.canvas` for the structured community layout
-- **Search** — every node is a searchable `.md` note
-
-### Rebuild Obsidian export after updating a graph
-
-```bash
-python - << 'EOF'
-import json
-from collections import defaultdict
-from networkx.readwrite import json_graph
-from graphify.export import to_obsidian, to_canvas
-from pathlib import Path
-
-def export(graph_path, out_dir):
-    data = json.loads(Path(graph_path).read_text(encoding='utf-8'))
-    G = json_graph.node_link_graph(data, edges='links')
-    communities = defaultdict(list)
-    for nid, attrs in G.nodes(data=True):
-        communities[int(attrs.get('community', 0))].append(nid)
-    communities = dict(communities)
-    n = to_obsidian(G, communities, str(out_dir))
-    to_canvas(G, communities, str(Path(out_dir) / 'graph.canvas'))
-    print(f'{out_dir}: {n} notes')
-
-VAULT = r"C:\Users\lucas\Documents\Obsidian\SecondBrain\graphify-vault"
-
-# Re-export one project
-export(r"C:\Users\lucas\dev\yrfi\graphify-out\graph.json", rf"{VAULT}\yrfi")
-
-# Re-export master
-export(r"C:\Users\lucas\dev\knowledge\graphify-out\graph.json", rf"{VAULT}\_master")
-EOF
-```
-
-## Adding a New Project
-
-```bash
-# 1. Create .graphifyignore
-cp "C:\Users\lucas\dev\bvp-betting\.graphifyignore" "C:\Users\lucas\dev\<new-project>\"
-
-# 2. Build graph
-cd "C:\Users\lucas\dev\<new-project>"
-PYTHONUTF8=1 python -m graphify . --no-viz
-
-# 3. Add junction to knowledge/
-powershell -Command "New-Item -ItemType Junction -Path 'C:\Users\lucas\dev\knowledge\<new-project>' -Target 'C:\Users\lucas\dev\<new-project>'"
-
-# 4. Rebuild master graph
-cd "C:\Users\lucas\dev\knowledge"
-PYTHONUTF8=1 python -m graphify . --update --no-viz
-```
+Then `/graphify C:\Users\lucas\dev\knowledge`.

@@ -1,143 +1,96 @@
 #!/usr/bin/env bash
 # L.L.O.Y.D. Status Line — Logical Learning & Optimization Yield Director
 #
-# Output: ◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  sonnet-4-6  ⟩  ████████░░ 78%  ⟩  ◆ Bash  ⟩  12 calls  ⟩  34m
+# Output: ◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████████░░ 78%  ⟩  $1.42  ⟩  5h 34%  ⟩  34m
+#
+# Everything comes from the JSON Claude Code pipes to stdin — no hooks, no state file.
+# Fields: https://code.claude.com/docs/en/statusline
 
-STATE="$HOME/.claude/statusline-state.json"
 input=$(cat)
 
 # ── ANSI codes ───────────────────────────────────────────────────────────────
-R=$'\033[0m'            # reset
-MAGENTA=$'\033[1;35m'   # bold magenta  — L·L·O·Y·D brand
-BLUE=$'\033[1;34m'      # bold blue     — folder / branch
-CYAN_DIM=$'\033[2;36m'  # dim cyan      — model name
-CYAN=$'\033[1;36m'      # bold cyan     — active tool
-GREEN=$'\033[0;32m'     # green         — context < 60%
-YELLOW=$'\033[0;33m'    # yellow        — context 60–84%
-RED=$'\033[1;31m'       # bold red      — context ≥ 85%
-WHITE=$'\033[0;37m'     # white         — counters
-DIM=$'\033[2;37m'       # dim white     — separators / parens
-
+R=$'\033[0m'
+MAGENTA=$'\033[1;35m'   # brand
+BLUE=$'\033[1;34m'      # folder / branch
+CYAN_DIM=$'\033[2;36m'  # model
+GREEN=$'\033[0;32m'
+YELLOW=$'\033[0;33m'
+RED=$'\033[1;31m'
+WHITE=$'\033[0;37m'
+DIM=$'\033[2;37m'
 SEP="${DIM} ⟩${R} "
 
-# ── Parse stdin JSON ─────────────────────────────────────────────────────────
-cwd=$(printf '%s' "$input"   | jq -r '.workspace.current_dir // .cwd // ""')
-model=$(printf '%s' "$input" | jq -r '.model.display_name // ""')
-used_pct=$(printf '%s' "$input" | jq -r '.context_window.used_percentage // empty')
+# ── Parse stdin JSON (one jq call) ───────────────────────────────────────────
+IFS=$'\t' read -r cwd model used_pct cost_usd dur_ms rl5 cache_on <<< "$(printf '%s' "$input" | jq -r '[
+  (.workspace.current_dir // .cwd // ""),
+  (.model.display_name // .model.name // ""),
+  (.context_window.used_percentage // ""),
+  (.cost.total_cost_usd // ""),
+  (.cost.total_duration_ms // ""),
+  (.rate_limits.five_hour.used_percentage // ""),
+  (.prompt_cache.enabled // "")
+] | @tsv' 2>/dev/null)"
 
-# ── Parse state file ─────────────────────────────────────────────────────────
-active_tool="" tool_calls=0 session_start=0
-if [ -f "$STATE" ]; then
-  active_tool=$(jq -r '.active_tool // ""'   "$STATE" 2>/dev/null || true)
-  tool_calls=$(jq -r  '.tool_calls // 0'     "$STATE" 2>/dev/null || echo 0)
-  session_start=$(jq -r '.session_start // 0' "$STATE" 2>/dev/null || echo 0)
-fi
+color_for_pct() {
+  local p=$1
+  if   [ "$p" -ge 85 ]; then printf '%s' "$RED"
+  elif [ "$p" -ge 60 ]; then printf '%s' "$YELLOW"
+  else                       printf '%s' "$GREEN"; fi
+}
 
-# ── Auto-reset if session > 5 hours ─────────────────────────────────────────
-now=$(date +%s)
-if [ "$session_start" -gt 0 ] 2>/dev/null; then
-  age=$(( now - session_start ))
-  if [ "$age" -gt 18000 ]; then
-    session_start=0; tool_calls=0; active_tool=""
-  fi
-fi
-
-# ── Derived values ────────────────────────────────────────────────────────────
-folder=$(basename "$cwd")
-
+# ── Location ─────────────────────────────────────────────────────────────────
+folder=$(basename "${cwd:-.}")
 branch=""
 if [ -n "$cwd" ] && git -C "$cwd" rev-parse --git-dir >/dev/null 2>&1; then
   branch=$(git -C "$cwd" -c core.fsmonitor=false symbolic-ref --short HEAD 2>/dev/null \
         || git -C "$cwd" -c core.fsmonitor=false rev-parse --short HEAD 2>/dev/null || true)
 fi
 
-# Shorten model: "Claude Sonnet 4.6" → "sonnet-4.6", "claude-sonnet-4-6" → "sonnet-4-6"
+# ── Model: "Claude Fable 5.1" → "fable-5.1" ──────────────────────────────────
 short_model=""
-if [ -n "$model" ]; then
-  short_model=$(printf '%s' "$model" \
-    | sed 's/^[Cc]laude[- ]//' \
-    | tr '[:upper:]' '[:lower:]' \
-    | tr ' ' '-')
-fi
+[ -n "$model" ] && short_model=$(printf '%s' "$model" | sed 's/^[Cc]laude[- ]//' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
-# Context bar (10 chars: █ filled, ░ empty)
+# ── Context bar ──────────────────────────────────────────────────────────────
 bar=""
 if [ -n "$used_pct" ]; then
   pct=$(printf "%.0f" "$used_pct" 2>/dev/null || echo 0)
-  filled=$(( pct * 10 / 100 ))
-  [ "$filled" -gt 10 ] && filled=10
-  empty=$(( 10 - filled ))
-
-  bar_filled="" bar_empty=""
-  for ((i=0; i<filled; i++)); do bar_filled="${bar_filled}█"; done
-  for ((i=0; i<empty;  i++)); do bar_empty="${bar_empty}░";  done
-
-  if   [ "$pct" -ge 85 ]; then bar_color="$RED"
-  elif [ "$pct" -ge 60 ]; then bar_color="$YELLOW"
-  else                          bar_color="$GREEN"
-  fi
-
-  bar="${bar_color}${bar_filled}${bar_empty} ${pct}%${R}"
+  filled=$(( pct * 10 / 100 )); [ "$filled" -gt 10 ] && filled=10
+  bar_filled=$(printf '█%.0s' $(seq 1 $filled) 2>/dev/null)
+  bar_empty=$(printf '░%.0s' $(seq 1 $((10 - filled))) 2>/dev/null)
+  bar="$(color_for_pct "$pct")${bar_filled}${bar_empty} ${pct}%${R}"
 fi
 
-# Active tool with glyph
-tool_str=""
-if [ -n "$active_tool" ]; then
-  case "$active_tool" in
-    Bash)              glyph="◆" ;;
-    Read)              glyph="⊞" ;;
-    Grep|Glob)         glyph="⌕" ;;
-    Write)             glyph="⊕" ;;
-    Edit)              glyph="⊗" ;;
-    Agent)             glyph="↗" ;;
-    WebSearch|WebFetch) glyph="⊛" ;;
-    *)                 glyph="⊙" ;;
-  esac
-  tool_str="${CYAN}${glyph} ${active_tool}${R}"
+# ── Cost ─────────────────────────────────────────────────────────────────────
+cost_str=""
+[ -n "$cost_usd" ] && cost_str="${WHITE}$(printf '$%.2f' "$cost_usd" 2>/dev/null)${R}"
+
+# ── 5-hour rate limit ────────────────────────────────────────────────────────
+rl_str=""
+if [ -n "$rl5" ]; then
+  rlp=$(printf "%.0f" "$rl5" 2>/dev/null || echo 0)
+  rl_str="$(color_for_pct "$rlp")5h ${rlp}%${R}"
 fi
 
-# Elapsed time since session start
+# ── Elapsed ──────────────────────────────────────────────────────────────────
 elapsed=""
-if [ "$session_start" -gt 0 ] 2>/dev/null; then
-  secs=$(( now - session_start ))
-  if [ "$secs" -ge 3600 ]; then
-    elapsed="$(( secs / 3600 ))h$(( (secs % 3600) / 60 ))m"
-  elif [ "$secs" -ge 60 ]; then
-    elapsed="$(( secs / 60 ))m"
-  else
-    elapsed="${secs}s"
-  fi
+if [ -n "$dur_ms" ]; then
+  secs=$(( ${dur_ms%.*} / 1000 ))
+  if   [ "$secs" -ge 3600 ]; then elapsed="$(( secs / 3600 ))h$(( (secs % 3600) / 60 ))m"
+  elif [ "$secs" -ge 60 ];   then elapsed="$(( secs / 60 ))m"
+  else                            elapsed="${secs}s"; fi
 fi
+[ "$cache_on" = "false" ] && elapsed="${elapsed} ${DIM}(no cache)${R}"
 
-# ── Assemble parts ────────────────────────────────────────────────────────────
-parts=()
-
-# Brand
-parts+=("${MAGENTA}◈ L·L·O·Y·D${R}")
-
-# Location: folder (branch)
-loc="${BLUE}${folder}${R}"
-[ -n "$branch" ] && loc="${loc} ${DIM}(${branch})${R}"
+# ── Assemble ─────────────────────────────────────────────────────────────────
+parts=("${MAGENTA}◈ L·L·O·Y·D${R}")
+loc="${BLUE}${folder}${R}"; [ -n "$branch" ] && loc="${loc} ${DIM}(${branch})${R}"
 parts+=("$loc")
-
-# Model (shortened)
 [ -n "$short_model" ] && parts+=("${CYAN_DIM}${short_model}${R}")
+[ -n "$bar" ]         && parts+=("$bar")
+[ -n "$cost_str" ]    && parts+=("$cost_str")
+[ -n "$rl_str" ]      && parts+=("$rl_str")
+[ -n "$elapsed" ]     && parts+=("${WHITE}${elapsed}${R}")
 
-# Context window bar
-[ -n "$bar" ] && parts+=("$bar")
-
-# Active tool
-[ -n "$tool_str" ] && parts+=("$tool_str")
-
-# Tool call count
-[ "${tool_calls:-0}" -gt 0 ] && parts+=("${WHITE}${tool_calls} calls${R}")
-
-# Elapsed time
-[ -n "$elapsed" ] && parts+=("${WHITE}${elapsed}${R}")
-
-# ── Output ────────────────────────────────────────────────────────────────────
 printf '%s' "${parts[0]}"
-for part in "${parts[@]:1}"; do
-  printf '%s%s' "$SEP" "$part"
-done
+for part in "${parts[@]:1}"; do printf '%s%s' "$SEP" "$part"; done
 printf '\n'

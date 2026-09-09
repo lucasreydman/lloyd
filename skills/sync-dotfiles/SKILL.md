@@ -1,98 +1,53 @@
 ---
 name: sync-dotfiles
-description: Syncs ~/.claude with the lucasreydman/lloyd GitHub repo (L.L.O.Y.D.) - pulls latest commits, updates submodules, and reports required user actions (missing API keys, dependencies, restarts).
+description: Syncs ~/.claude with the lucasreydman/lloyd GitHub repo (L.L.O.Y.D.) - pulls latest commits and reports required user actions (missing API keys, plugins, dependencies, restarts).
 user-invocable: true
 allowed-tools: Bash, Read, Write
 ---
 
 # sync-dotfiles
 
-Pulls the latest L.L.O.Y.D. config from `lucasreydman/lloyd` into `~/.claude`, initializes submodules, and produces a clear action report.
+Pulls the latest L.L.O.Y.D. config from `lucasreydman/lloyd` into `~/.claude` and produces a clear action report.
 
 ## Steps
 
-Execute these in order:
-
-### 1. Stash or discard local changes
+### 1. Check local state
 
 ```bash
-cd ~/.claude
-git status --short
+cd ~/.claude && git status --short
 ```
 
-- If only auto-generated files are modified (e.g. `plugins/known_marketplaces.json`, `plugins/installed_plugins.json`), discard them:
-  ```bash
-  git checkout -- plugins/known_marketplaces.json plugins/installed_plugins.json 2>/dev/null; true
-  ```
-- **Never discard `settings.json`** — it holds intentional config (hooks, MCP servers, permissions). If it's modified, commit it.
-- If real intentional local edits exist, commit them first before pulling.
+- Runtime files are gitignored, so anything listed is an intentional local edit. Commit it before pulling; never discard `settings.json` or `CLAUDE.md`.
 
-### 2. Pull with submodules
+### 2. Pull
 
 ```bash
-git pull --recurse-submodules origin main
+cd ~/.claude && git pull --ff-only origin main && git log --oneline ORIG_HEAD..HEAD
 ```
 
-### 3. Check what changed
+Report each new commit as a bullet.
+
+### 3. Audit dependencies, plugins, keys (run in parallel)
 
 ```bash
-git log --oneline ORIG_HEAD..HEAD
+claude plugin list | grep -A2 last30days || echo "MISSING: run: claude plugin marketplace add mvanhorn/last30days-skill && claude plugin install last30days@last30days-skill"
+claude mcp list
+yt-dlp --version 2>/dev/null || echo "MISSING: yt-dlp (winget install yt-dlp.yt-dlp)"
+python -m pip show graphifyy 2>/dev/null | grep -i version || echo "MISSING: pip install graphifyy"
+grep -E "GITHUB_PERSONAL_ACCESS_TOKEN|BRAVE_API_KEY|XAI_API_KEY" ~/.bashrc 2>/dev/null || echo "MISSING: API keys in ~/.bashrc"
+cat ~/.config/last30days/.env 2>/dev/null >/dev/null || echo "MISSING: ~/.config/last30days/.env"
+git config --global core.excludesFile || echo "MISSING: global gitignore (see README step 6)"
 ```
 
-Report each commit to the user as a bullet.
+Expected MCP: `context7` (user scope in `~/.claude.json`). `higgsfield`/`shadcn` appear only inside `lucasreydman.xyz`.
 
-### 4. Audit dependencies and API keys
+### 4. Report
 
-Run these checks in parallel:
-
-```bash
-# ruflo
-ruflo --version 2>/dev/null || echo "MISSING: ruflo"
-
-# yt-dlp
-yt-dlp --version 2>/dev/null || echo "MISSING: yt-dlp"
-```
-
-> **MCP servers (ruflo, playwright, github, context7):** Use `/doctor` in Claude Code to confirm they are actually connected — not just installed. Installation alone does not guarantee the MCP server is running and reachable.
-
-```bash
-# API keys in ~/.bashrc
-grep -E "GITHUB_PERSONAL_ACCESS_TOKEN|BRAVE_API_KEY|XAI_API_KEY" ~/.bashrc 2>/dev/null
-```
-
-```bash
-# last30days .env
-cat ~/.config/last30days/.env 2>/dev/null || echo "MISSING: ~/.config/last30days/.env"
-```
-
-### 5. Detect settings.json drift
-
-Compare key sections of local `settings.json` with `git show origin/main:settings.json`. If local is missing `mcpServers`, `permissions.allow`, or `sandbox` blocks — flag it.
-
-### 6. Report to user
-
-Produce a summary with two sections:
-
-**What changed:**
-- Bullet each new commit
-
-**Action required:**
-- List only items that are actually missing or misconfigured
-- If nothing is missing, say "All good — no actions required."
-
-## Required User Actions (reference)
-
-| Item | Where | Status check |
-|------|-------|-------------|
-| `GITHUB_PERSONAL_ACCESS_TOKEN` | `~/.bashrc` | `grep GITHUB_PERSONAL ~/.bashrc` |
-| `BRAVE_API_KEY` | `~/.bashrc` | `grep BRAVE_API ~/.bashrc` |
-| `XAI_API_KEY` | `~/.bashrc` + `~/.config/last30days/.env` | optional but enables X/Twitter |
-| `ruflo` binary | PATH | `ruflo --version` |
-| `yt-dlp` binary | PATH | `yt-dlp --version` |
-| Restart Claude Code | — | Required after `settings.json` changes |
+**What changed:** one bullet per commit.
+**Action required:** only items actually missing. If `settings.json` or `statusline-command.sh` changed, say **restart Claude Code**. If nothing is missing: "All good — no actions required."
 
 ## Notes
 
-- **`~/.claude` IS the dotfiles repo. Never clone it to `~/dev/` or anywhere else.** Git operations (`pull`, `push`, `commit`) always run in `~/.claude` directly — that is the working copy.
-- `plugins/known_marketplaces.json` is excluded from git (auto-generated) — ignore drift there
-- After pulling, if `settings.json` changed → tell user to **restart Claude Code**
+- **`~/.claude` IS the dotfiles repo. Never clone it anywhere else.**
+- MCP servers are NOT in `settings.json` (Claude Code ignores that key). User-scope servers live in `~/.claude.json` via `claude mcp add --scope user`; project servers in `<project>/.mcp.json`.
+- Auto-memory (`projects/*/memory/`) is deliberately not synced — the repo is public.

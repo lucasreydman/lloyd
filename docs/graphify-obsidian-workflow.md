@@ -15,8 +15,8 @@ Graphify indexes the Obsidian vault into a persistent knowledge graph. Claude re
 
 ```bash
 pip install graphifyy
-python -m graphify install          # registers graphify skill in ~/.claude
-python -m graphify claude install   # adds CLAUDE.md section + PreToolUse hook
+python -m graphify install --platform claude   # registers the /graphify skill in ~/.claude/skills
+# (do NOT run 'graphify claude install' — L.L.O.Y.D.'s CLAUDE.md already carries the graphify rules, and the PreToolUse hook is not wanted)
 ```
 
 ## Build / refresh the graph

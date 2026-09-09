@@ -9,33 +9,22 @@ When a task touches an external service, use its official CLI before falling bac
 - **Vercel**: `vercel`
 - Any other service CLI (stripe, etc.) when present
 
-Only ask me for what you genuinely can't do (interactive browser login, a fresh secret). Surface account-level creation and destructive steps first.
+No MCP servers for these — CLIs are cheaper and more reliable. Only ask me for what you genuinely can't do (interactive browser login, a fresh secret). Surface account-level creation and destructive steps first.
 
 ## Model Routing (subagents)
 
-Team premium seat — spend tokens freely for best results. Default to the best available model (Fable 5 / Opus-tier) wherever output quality matters: implementation, debugging, research, architecture. Route down to `haiku` only for purely mechanical grunt work where a smarter model adds nothing (file reads, grep, test runs, pass/fail checks) — that's about speed, not quota. Never Haiku for output I read directly.
+Team premium seat — spend tokens freely for best results. Default to the best available model (Fable 5 / Opus-tier) wherever output quality matters: implementation, debugging, research, architecture. Route down to `haiku` only for purely mechanical grunt work where a smarter model adds nothing (file reads, grep, test runs, pass/fail checks) — that's about speed, not quota. Never Haiku for output I read directly. Use the built-in agents (Explore, Plan, general-purpose); there are no custom agent files.
 
 ## Skills
 
-Run `/lloyd` for the full grouped skill reference.
+Run `/lloyd` for the full grouped skill reference. `last30days` is a marketplace plugin (`claude plugin update last30days@last30days-skill` to update).
 
 ## graphify — Knowledge Graph
 
-All dev projects and the Obsidian vault are graphified. Use the graph before searching raw files.
+Graphs exist only for some projects (`graphify-out/` present): bvp-betting, cv, deskvitals-live, nba-dynasty-rankings, sharprfi, shielded-wheel, plus the cross-project master at `C:\Users\lucas\dev\knowledge\graphify-out\`. Obsidian canvases live in `SecondBrain/graphify-vault/<project>/graph.canvas`.
 
-### Knowledge sources (in priority order)
-
-| Scope | GRAPH_REPORT.md | graph.json | Obsidian canvas |
-|-------|----------------|------------|-----------------|
-| Current project | `<project>/graphify-out/GRAPH_REPORT.md` | `<project>/graphify-out/graph.json` | `SecondBrain/graphify-vault/<project>/graph.canvas` |
-| Cross-project | `C:\Users\lucas\dev\knowledge\graphify-out\GRAPH_REPORT.md` | `...\knowledge\graphify-out\graph.json` | `SecondBrain/graphify-vault/_master/graph.canvas` |
-| Obsidian vault | `C:\Users\lucas\Documents\Obsidian\SecondBrain\graphify-out\GRAPH_REPORT.md` | — | — |
-
-### Rules
-- **Before exploring any codebase**: read that project's `graphify-out/GRAPH_REPORT.md` first
-- **Cross-project questions**: read `C:\Users\lucas\dev\knowledge\graphify-out\GRAPH_REPORT.md`
-- **Focused queries** (prefer over raw grep): `PYTHONUTF8=1 python -m graphify query "<question>" --graph <path>/graph.json --budget 1500`
-- **Never dump graph.json into context** — use `graphify query` for traversal
-- **After code changes**: `PYTHONUTF8=1 python -m graphify . --update --no-viz` in the project dir
-- **Smart scope (always)**: graph the app's structure, not runtime artifacts. Exclude logs/, data dumps, screenshots/, crash dumps, recorded fixtures, generated docs — even if `detect` doesn't filter them. If noise dominates the top-level dirs, propose a code-only scope (`src/ app/ lib/ engine/ dashboard/ components/` + `README.md`/`CLAUDE.md`/`AGENTS.md`) and confirm.
-- **Projects with graphs**: bvp-betting, csci3172, cv, fantasy-draft-lottery-simulator, mlb-cfr, nba-dynasty-rankings, pride-stem-combined, sharprfi (formerly yrfi), tpdl-lottery, valentine, what-do-i-need-on-my-final
+- **If `graphify-out/` exists in the project**: read `graphify-out/GRAPH_REPORT.md` before exploring, then `PYTHONUTF8=1 python -m graphify query "<question>" --graph graphify-out/graph.json --budget 1500`. Never dump `graph.json` into context.
+- **If it doesn't exist**: skip graphify entirely — don't go looking for a graph.
+- **Cross-project questions**: `C:\Users\lucas\dev\knowledge\graphify-out\GRAPH_REPORT.md`.
+- **After code changes in a graphed project**: `PYTHONUTF8=1 python -m graphify update .` (AST-only, no LLM), then re-export the Obsidian canvas (see memory `feedback_graphify_viz`).
+- **New graphs**: use the `/graphify` skill, scope to app code (`src/ app/ lib/ components/` + README/CLAUDE.md), exclude logs, dumps, screenshots, fixtures, generated docs.

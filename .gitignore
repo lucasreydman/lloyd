@@ -1,9 +1,10 @@
-# Credentials - NEVER commit
+# ── Secrets — never commit ──────────────────────────────────────────────────
 .credentials.json
 
-# Machine-specific / ephemeral
+# ── Runtime / machine-specific (Claude Code manages these) ─────────────────
 history.jsonl
-/cache/
+*.jsonl
+cache/
 backups/
 debug/
 downloads/
@@ -15,46 +16,34 @@ shell-snapshots/
 tasks/
 telemetry/
 ide/
-
-# Plugin cache and marketplace repos (re-fetched automatically)
-plugins/cache/superpowers-marketplace/
-plugins/cache/claude-plugins-official/
-plugins/marketplaces/
-# Note: plugins/cache/direct/ is intentionally tracked (manually pinned plugins via submodules)
-plugins/blocklist.json
-plugins/blocklist.json*.tmp
-
-# Plans (ephemeral)
+daemon/
 plans/
+todos/
+statusline-state.json
+mcp-needs-auth-cache.json
+policy-limits.json
+remote-settings.json
+.last-cleanup
+.last-update-result.json
+settings.local.json
 
-# Project session data - keep only memory/
-projects/**
-!projects/
-!projects/*/
-!projects/*/memory/
-!projects/*/memory/**
+# Project session data and auto-memory stay local (this repo is PUBLIC)
+projects/
 
-# Temp files
+# ── Plugins: marketplaces and caches are re-fetched on install ─────────────
+plugins/cache/
+plugins/marketplaces/
+plugins/data/
+plugins/blocklist.json*
+plugins/install-counts-cache.json
+plugins/known_marketplaces.json
+plugins/.last_inuse_sweep
+
+# ── Misc ───────────────────────────────────────────────────────────────────
 *.tmp
-
-# Python cache
 **/__pycache__/
 *.pyc
 
-# Claude local runtime (DO NOT SYNC)
-plans/
-todos/
-projects/
-*.jsonl
-
-# Machine-specific local settings (auto-generated per machine)
-.claude/settings.local.json
-
-# Status line runtime state (auto-generated, persists across terminals)
-statusline-state.json
-
-# Plugin local state
-plugins/blocklist.json
-plugins/install-counts-cache.json
-plugins/known_marketplaces.json
-
+# Auto-managed by claude plugin
+plugins/installed_plugins.json
+*.bak
