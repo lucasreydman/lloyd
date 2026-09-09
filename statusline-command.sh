@@ -21,7 +21,7 @@ DIM=$'\033[2;37m'
 SEP="${DIM} ⟩${R} "
 
 # ── Parse stdin JSON (one jq call) ───────────────────────────────────────────
-IFS=$'\t' read -r cwd model used_pct cost_usd dur_ms rl5 cache_on <<< "$(printf '%s' "$input" | jq -r '[
+IFS=$'\t' read -r cwd model used_pct dur_ms rl5 rl7 cache_on <<< "$(printf '%s' "$input" | jq -r '[
   (.workspace.current_dir // .cwd // ""),
   (.model.display_name // .model.name // ""),
   (.context_window.used_percentage // ""),
