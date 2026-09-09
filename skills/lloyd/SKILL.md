@@ -98,4 +98,4 @@ Auto-memory at `~/.claude/projects/<project>/memory/` — `MEMORY.md` index (fir
 
 ## Status line
 
-`statusline-command.sh` reads only the native JSON Claude Code provides: folder, branch, model, context bar, session cost, 5-hour rate-limit %, elapsed. No hooks.
+`statusline-command.sh` reads only the native JSON Claude Code provides: folder, branch, model, context bar, 5-hour and 7-day rate-limit %, elapsed. No hooks.

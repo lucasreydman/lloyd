@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # L.L.O.Y.D. Status Line — Logical Learning & Optimization Yield Director
 #
-# Output: ◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████████░░ 78%  ⟩  $1.42  ⟩  5h 34%  ⟩  34m
+# Output: ◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████████░░ 78%  ⟩  5h 34%  ⟩  7d 12%  ⟩  34m
 #
 # Everything comes from the JSON Claude Code pipes to stdin — no hooks, no state file.
 # Fields: https://code.claude.com/docs/en/statusline
@@ -25,9 +25,9 @@ IFS=$'\t' read -r cwd model used_pct cost_usd dur_ms rl5 cache_on <<< "$(printf 
   (.workspace.current_dir // .cwd // ""),
   (.model.display_name // .model.name // ""),
   (.context_window.used_percentage // ""),
-  (.cost.total_cost_usd // ""),
   (.cost.total_duration_ms // ""),
   (.rate_limits.five_hour.used_percentage // ""),
+  (.rate_limits.seven_day.used_percentage // ""),
   (.prompt_cache.enabled // "")
 ] | @tsv' 2>/dev/null)"
 
@@ -60,15 +60,15 @@ if [ -n "$used_pct" ]; then
   bar="$(color_for_pct "$pct")${bar_filled}${bar_empty} ${pct}%${R}"
 fi
 
-# ── Cost ─────────────────────────────────────────────────────────────────────
-cost_str=""
-[ -n "$cost_usd" ] && cost_str="${WHITE}$(printf '$%.2f' "$cost_usd" 2>/dev/null)${R}"
-
-# ── 5-hour rate limit ────────────────────────────────────────────────────────
-rl_str=""
+# ── Subscription rate limits (what actually meters usage) ────────────────────
+rl_str="" rl7_str=""
 if [ -n "$rl5" ]; then
   rlp=$(printf "%.0f" "$rl5" 2>/dev/null || echo 0)
   rl_str="$(color_for_pct "$rlp")5h ${rlp}%${R}"
+fi
+if [ -n "$rl7" ]; then
+  rlp7=$(printf "%.0f" "$rl7" 2>/dev/null || echo 0)
+  rl7_str="$(color_for_pct "$rlp7")7d ${rlp7}%${R}"
 fi
 
 # ── Elapsed ──────────────────────────────────────────────────────────────────
@@ -87,8 +87,8 @@ loc="${BLUE}${folder}${R}"; [ -n "$branch" ] && loc="${loc} ${DIM}(${branch})${R
 parts+=("$loc")
 [ -n "$short_model" ] && parts+=("${CYAN_DIM}${short_model}${R}")
 [ -n "$bar" ]         && parts+=("$bar")
-[ -n "$cost_str" ]    && parts+=("$cost_str")
 [ -n "$rl_str" ]      && parts+=("$rl_str")
+[ -n "$rl7_str" ]     && parts+=("$rl7_str")
 [ -n "$elapsed" ]     && parts+=("${WHITE}${elapsed}${R}")
 
 printf '%s' "${parts[0]}"

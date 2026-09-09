@@ -105,7 +105,7 @@ git config --global core.excludesFile ~/.claude/gitignore_global
 ## Status line
 
 ```
-◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████░░░░░░ 43%  ⟩  $1.42  ⟩  5h 34%  ⟩  34m
+◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████░░░░░░ 43%  ⟩  5h 34%  ⟩  7d 12%  ⟩  34m
 ```
 
 | Field | Source |
@@ -113,7 +113,7 @@ git config --global core.excludesFile ~/.claude/gitignore_global
 | folder (branch) | `workspace.current_dir` + git |
 | model | `model.display_name` |
 | context bar | `context_window.used_percentage` (green → yellow 60% → red 85%) |
-| `$1.42` | `cost.total_cost_usd` |
+| `7d 12%` | `rate_limits.seven_day.used_percentage` |
 | `5h 34%` | `rate_limits.five_hour.used_percentage` |
 | `34m` | `cost.total_duration_ms` (adds `(no cache)` when prompt cache is off) |
 
