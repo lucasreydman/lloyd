@@ -29,7 +29,7 @@ IFS=$'\t' read -r cwd model used_pct dur_ms rl5 rl7 cache_on <<< "$(printf '%s' 
   (.rate_limits.five_hour.used_percentage // ""),
   (.rate_limits.seven_day.used_percentage // ""),
   (.prompt_cache.enabled // "")
-] | @tsv' 2>/dev/null)"
+] | map(tostring) | join("")' 2>/dev/null)"
 
 color_for_pct() {
   local p=$1
