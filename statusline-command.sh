@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # L.L.O.Y.D. Status Line — Logical Learning & Optimization Yield Director
 #
-# Output: ◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████████░░ 78%  ⟩  5h 34%  ⟩  7d 12%  ⟩  34m
+# Output: ◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  context ████████░░ 78%  ⟩  session ███░░░░░░░ 34%  ⟩  weekly █░░░░░░░░░ 12%  ⟩  34m
 #
 # Everything comes from the JSON Claude Code pipes to stdin — no hooks, no state file.
 # Fields: https://code.claude.com/docs/en/statusline
@@ -38,6 +38,17 @@ color_for_pct() {
   else                       printf '%s' "$GREEN"; fi
 }
 
+# meter <label> <percentage>  →  "label ████░░░░░░ 43%" coloured by threshold
+meter() {
+  local label=$1 raw=$2 pct filled empty bar_filled="" bar_empty="" i
+  pct=$(printf "%.0f" "$raw" 2>/dev/null || echo 0)
+  [ "$pct" -lt 0 ] && pct=0; [ "$pct" -gt 100 ] && pct=100
+  filled=$(( pct * 10 / 100 )); empty=$(( 10 - filled ))
+  for ((i=0; i<filled; i++)); do bar_filled="${bar_filled}█"; done
+  for ((i=0; i<empty;  i++)); do bar_empty="${bar_empty}░";  done
+  printf '%s%s %s%s%s %s%%%s' "$DIM" "$label" "$(color_for_pct "$pct")" "$bar_filled" "$bar_empty" "$pct" "$R"
+}
+
 # ── Location ─────────────────────────────────────────────────────────────────
 folder=$(basename "${cwd:-.}")
 branch=""
@@ -50,26 +61,10 @@ fi
 short_model=""
 [ -n "$model" ] && short_model=$(printf '%s' "$model" | sed 's/^[Cc]laude[- ]//' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
-# ── Context bar ──────────────────────────────────────────────────────────────
-bar=""
-if [ -n "$used_pct" ]; then
-  pct=$(printf "%.0f" "$used_pct" 2>/dev/null || echo 0)
-  filled=$(( pct * 10 / 100 )); [ "$filled" -gt 10 ] && filled=10
-  bar_filled=$(printf '█%.0s' $(seq 1 $filled) 2>/dev/null)
-  bar_empty=$(printf '░%.0s' $(seq 1 $((10 - filled))) 2>/dev/null)
-  bar="$(color_for_pct "$pct")${bar_filled}${bar_empty} ${pct}%${R}"
-fi
-
-# ── Subscription rate limits (what actually meters usage) ────────────────────
-rl_str="" rl7_str=""
-if [ -n "$rl5" ]; then
-  rlp=$(printf "%.0f" "$rl5" 2>/dev/null || echo 0)
-  rl_str="$(color_for_pct "$rlp")5h ${rlp}%${R}"
-fi
-if [ -n "$rl7" ]; then
-  rlp7=$(printf "%.0f" "$rl7" 2>/dev/null || echo 0)
-  rl7_str="$(color_for_pct "$rlp7")7d ${rlp7}%${R}"
-fi
+# ── Meters: context window, 5-hour session limit, 7-day weekly limit ────────
+bar=""    ; [ -n "$used_pct" ] && bar=$(meter context "$used_pct")
+rl_str="" ; [ -n "$rl5" ]      && rl_str=$(meter session "$rl5")
+rl7_str=""; [ -n "$rl7" ]      && rl7_str=$(meter weekly "$rl7")
 
 # ── Elapsed ──────────────────────────────────────────────────────────────────
 elapsed=""

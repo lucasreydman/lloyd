@@ -105,16 +105,16 @@ git config --global core.excludesFile ~/.claude/gitignore_global
 ## Status line
 
 ```
-◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████░░░░░░ 43%  ⟩  5h 34%  ⟩  7d 12%  ⟩  34m
+◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████░░░░░░ 43%  ⟩  context ████████░░ 78%  ⟩  session ███░░░░░░░ 34%  ⟩  weekly █░░░░░░░░░ 12%  ⟩  34m
 ```
 
 | Field | Source |
 |-------|--------|
 | folder (branch) | `workspace.current_dir` + git |
 | model | `model.display_name` |
-| context bar | `context_window.used_percentage` (green → yellow 60% → red 85%) |
-| `7d 12%` | `rate_limits.seven_day.used_percentage` |
-| `5h 34%` | `rate_limits.five_hour.used_percentage` |
+| `context` meter | `context_window.used_percentage` |
+| `weekly` meter | `rate_limits.seven_day.used_percentage` |
+| `session` meter | `rate_limits.five_hour.used_percentage` |
 | `34m` | `cost.total_duration_ms` (adds `(no cache)` when prompt cache is off) |
 
 No hooks and no state file — earlier versions tracked tool calls with PreToolUse/PostToolUse hooks, which cost ~0.5 s per tool call on Windows.
