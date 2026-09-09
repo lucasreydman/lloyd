@@ -105,7 +105,7 @@ git config --global core.excludesFile ~/.claude/gitignore_global
 ## Status line
 
 ```
-◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  ████░░░░░░ 43%  ⟩  context ████████░░ 78%  ⟩  session ███░░░░░░░ 34%  ⟩  weekly █░░░░░░░░░ 12%  ⟩  open 4h29m  working 52m
+◈ L·L·O·Y·D  ⟩  .claude (main)  ⟩  fable-5.1  ⟩  context ████████░░ 78%  ⟩  session ███░░░░░░░ 34%  ⟩  weekly █░░░░░░░░░ 12%  ⟩  open 4h29m  working 52m
 ```
 
 | Field | Source |
